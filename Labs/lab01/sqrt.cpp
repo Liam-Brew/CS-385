@@ -59,4 +59,5 @@ int main(int argc, char* argv[]) {
     iss.clear();
 
     cout << fixed << setprecision(8) << sqrt(num, epsilon) << endl;
+    return 0;
 }
