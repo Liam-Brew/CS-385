@@ -61,6 +61,7 @@ int main() {
     }
     display_array(values, y);
     display_array_ptr(values, y);
+    delete [] values;
 
     x = 5;
     y = 6;
