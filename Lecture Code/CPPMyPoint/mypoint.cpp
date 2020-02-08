@@ -24,7 +24,7 @@ public:
         return x_;
     }
 
-    //Mutator.
+    // Mutator.
     void set_x(int x){
         x_ = x;
     }
