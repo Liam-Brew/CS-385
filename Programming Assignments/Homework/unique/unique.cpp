@@ -11,69 +11,91 @@
 
 using namespace std;
 
+/*
+    @Description
+    Determines if all characters in the string are lowercase letters in the English alphabet.
+    Analyzes the ASCII values of each char of the string to see if they fall within the set of lowercase letters.
+
+    @Parameters
+    const string &s: the string to analyze 
+
+    @Return
+    Boolean indicating if all chars of the string are lowercase letters. 
+
+*/
 bool is_all_lowercase(const string &s) {
-    // TODO: returns true if all characters in string are lowercase
-    // letters in the English alphabet; false otherwise.
-
-    char alphabet[27] = "abcdefghijklmnopqrstuvwxyz";
-
-    for (unsigned int i = 0; i < s.length(); i++) {
-        bool found = false;
-        for (int k = 0; k < 27; k++) {
-            if (alphabet[k] == s[i]) {
-                found = true;
-            }
-        }
-        if (!found) {
+    for (auto &letter : s) {
+        // For every char of the string.
+        if (letter < 'a' || letter > 'z') {
+            // Is the char outside the range of lowercase letters?
             return false;
         }
     }
     return true;
 }
 
+/*
+    @Description
+    Determines if all chars in the string are unique (no duplicates). 
+        *Assumes that all chars are lowercase English letters.
+        *Examines each char of the string. Performs left shifts on 1 equal to the difference of that char and a.
+        *If the bitwise AND of the result of those shifts and the original set of bits is true, then that char already exists.
+        *Otherwise, the set of bits is updated to be the bitwise OR of itself and the result of the shifts on the char.
+
+    @Parameters
+    const string &s: the string to analyze
+
+    @Return
+    Boolean indicating if all chars of the string are unique.
+
+*/
 bool all_unique_letters(const string &s) {
-    // TODO: returns true if all letters in string are unique, that is
-    // no duplicates are found; false otherwise.
-    // You may use only a single int for storage and work with bitwise
-    // and bitshifting operators.
-    // No credit will be given for other solutions.
+    // The original set of 32 bits.
+    unsigned int set = 0;
 
-    int count = 0;
-    for (unsigned int i = 0; i < s.length(); i++) {
-        int index = s[i] - 'a';
+    for (char const &c : s) {
+        // For every char in the string. 
 
-        if (((1 << index) & count) > 0) {
+        int setter;
+        // Result of bitshifts. 
+        setter = 1 << (c - 'a');
+
+        if (setter & set) {
+            // Is the bitwise AND of the result of the bitshifts and the set of bits true? 
             return false;
         }
 
-        count = count | (1 << index);
+        // Set of bits update.
+        set |= setter;
     }
-
     return true;
 }
 
 int main(int argc, char *const argv[]) {
-    // TODO: reads and parses command line arguments.
-    // Calls other functions to produce correct output.
 
     if (argc == 1) {
+        // Is the argument missing?
         cerr << "Usage: ./unique <string>" << endl;
         return 1;
     }
 
     if (argc > 2) {
+        // Are there too many arguments?
         cerr << "Usage: ./unique <string>" << endl;
         return 1;
     }
 
+    // Assignment for ease of use. 
     string input_str = argv[1];
 
     if (!is_all_lowercase(input_str)) {
+        // Are all chars of the string lowercase?
         cerr << "Error: String must contain only lowercase letters." << endl;
         return 1;
     }
 
     if (!all_unique_letters(input_str)) {
+        // Are all chars of the string unique?
         cerr << "Duplicate letters found." << endl;
         return 1;
     }
