@@ -51,22 +51,22 @@ bool is_all_lowercase(const string &s) {
 */
 bool all_unique_letters(const string &s) {
     // The original set of 32 bits.
-    unsigned int set = 0;
+    unsigned int bitset = 0;
 
     for (char const &c : s) {
         // For every char in the string. 
 
-        int setter;
+        unsigned int setter;
         // Result of bitshifts. 
         setter = 1 << (c - 'a');
 
-        if (setter & set) {
+        if (setter & bitset) {
             // Is the bitwise AND of the result of the bitshifts and the set of bits true? 
             return false;
         }
 
         // Set of bits update.
-        set |= setter;
+        bitset |= setter;
     }
     return true;
 }
