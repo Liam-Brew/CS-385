@@ -18,18 +18,20 @@ vector<vector<int>> get_ways(int num_stairs) {
     // the different combinations of ways to climb num_stairs
     // stairs, moving up either 1, 2, or 3 stairs at a time.
 
-    vector<vector<int>> result = {};
+    vector<vector<int>> result;
 
     if (num_stairs <= 0) {
-        result.push_back({});
+        result.push_back(vector<int>());
     } else {
         for (int i = 1; i < 4; i++) {
             if (num_stairs >= i) {
-                vector<vector<int>> answer = get_ways(num_stairs - 1);
-                for (auto index : answer) {
-                    index.push_back(i);
+                vector<vector<int>> answer = get_ways(num_stairs - i);
+
+                for (auto &index : answer) {
+                    index.insert(index.begin(), i);
                 }
-                result.insert(result.begin(), answer.begin(), answer.end());
+
+                result.insert(result.end(), answer.begin(), answer.end());
             }
         }
     }
@@ -39,14 +41,22 @@ vector<vector<int>> get_ways(int num_stairs) {
 void display_ways(const vector<vector<int>> &ways) {
     // TODO: Display the ways to climb stairs by iterating over
     // the vector of vectors and printing each combination.
-
-    for (vector<int> shallow : ways) {
-        cout << "[";
-        for (int deep : shallow) {
-            cout << deep << ", ";
+    for (auto &shallow : ways) {
+        cout << "[hi";
+        for (unsigned int deep = 0; deep < shallow.size() - 1; deep++) {
+            cout << shallow[deep] << ", ";
         }
+        cout << shallow[shallow.size() - 1];
+        cout << "]" << endl;
     }
 }
 
 int main(int argc, char *const argv[]) {
+
+    cout << "Enter number of stairs: ";
+    int stairNumber;
+    cin >> stairNumber;
+
+    display_ways(get_ways(stairNumber));
 }
+//test
