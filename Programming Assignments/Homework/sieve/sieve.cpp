@@ -149,7 +149,7 @@ void PrimesSieve::sieve() {
 /*
     @Description
     Calculates the amount of digits that are in a number by dividing it by 10 until the resultant is 0.
-    Every successful dividision represents an additional digit.
+    Every successful division represents an additional digit.
 
     @Parameters
     int num : the number to analyze
