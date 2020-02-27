@@ -13,6 +13,8 @@
 
 using namespace std;
 
+istringstream iss;
+
 vector<vector<int>> get_ways(int num_stairs) {
     // TODO: Return a vector of vectors of ints representing
     // the different combinations of ways to climb num_stairs
@@ -41,8 +43,10 @@ vector<vector<int>> get_ways(int num_stairs) {
 void display_ways(const vector<vector<int>> &ways) {
     // TODO: Display the ways to climb stairs by iterating over
     // the vector of vectors and printing each combination.
+
+    cout << ways.size() << " of ways to climb 3 stairs." << endl;
     for (auto &shallow : ways) {
-        cout << "[hi";
+        cout << "[";
         for (unsigned int deep = 0; deep < shallow.size() - 1; deep++) {
             cout << shallow[deep] << ", ";
         }
@@ -53,10 +57,21 @@ void display_ways(const vector<vector<int>> &ways) {
 
 int main(int argc, char *const argv[]) {
 
-    cout << "Enter number of stairs: ";
-    int stairNumber;
-    cin >> stairNumber;
+    if (argc < 2 && argc > 3) {
+        cout << "Usage: ./stairclimber <number of stairs>" << endl;
+        return 1;
+    }
 
-    display_ways(get_ways(stairNumber));
+    if (!(iss >> argv[1])) {
+        cout << "Error: Number of stairs must be a positive integer." << endl;
+        return 1;
+    }
+    
+    int input = (int)argv[1];
+
+    if(input < 1){
+        cout << "Error: Number of stairs must be a positive integer." << endl;
+    }
+
+    
 }
-//test
