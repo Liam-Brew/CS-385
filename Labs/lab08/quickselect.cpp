@@ -142,6 +142,6 @@ int main(int argc, char *argv[]) {
     // Selection invokation.
     int *vals = &values[0];  //vector => array to pass into function
     cout << "Smallest element " << k << ": " << quick_select(vals, num_values, k);
-
+  
     return 0;
 }
