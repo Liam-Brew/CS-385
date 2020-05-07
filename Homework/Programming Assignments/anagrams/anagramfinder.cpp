@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -18,26 +19,66 @@
 using namespace std;
 
 // Data Fields.
-vector<string> words;
+vector<vector<int>> components;           // The components of all words for a given size.
+map<unsigned int, vector<string>> words;  // Words imported from dictionary.
+unsigned int max_size;                    // Maximum word size.
 
 // Functions.
 
+// ###### Character Validation ######
+
 /**
- * Returns a boolean indicating if every character of the input string is either an upper or lower case letter, a hyphen or an apostrophe.
+ * Returns a boolean indicating if a character is upper case.
+*/
+bool upper_case(char character) {
+    return (character >= 'A') && (character <= 'Z');
+}
+
+/**
+ * Returns a boolean indicating if a character is lower case.
+*/
+bool lower_case(char character) {
+    return (character >= 'a') && (character <= 'z');
+}
+
+/**
+ * Returns a boolean indicating if a character is a hyphen.
+*/
+bool hyphen(char character) {
+    return character == '-';
+}
+
+/**
+ * Returns a boolean indicating if a character is an apostrophe.
+*/
+bool apostrophe(char character) {
+    return character == '\'';
+}
+
+/**
+ * Returns a boolean indicating if every character of the input string valid.
 */
 bool char_check(string str) {
-    for (char &character : str) {                                    // Check for illegal characters.
-        bool upper_case = (character >= 'a') && (character <= 'z');  // If character is uppercase.
-        bool lower_case = (character >= 'A') && (character <= 'Z');  // If character is lowercase.
-        bool hyphen = character == '-';                              // If character is a hyphen.
-        bool apostrophe = character == '\'';                         // If character is an apostrophe.
-
-        if (!(upper_case || lower_case || hyphen || apostrophe))
+    for (char &character : str) {  // Check for illegal characters.
+        if (upper_case(character))
+            continue;
+        else if (lower_case(character))
+            continue;
+        else if (hyphen(character))
+            continue;
+        else if (apostrophe(character))
+            continue;
+        else
             return false;
     }
     return true;
 }
 
+// ###### File Reading ######
+
+/**
+ * Reads the words from the input file and determines if they are valid.
+*/
 bool load_words(const string &filename) {
     //TODO
     ifstream input_file(filename.c_str());
@@ -49,7 +90,16 @@ bool load_words(const string &filename) {
     string line;
     try {
         while (getline(input_file, line)) {
-            if (char_check(line)) words.push_back(line);
+            if (char_check(line)) {
+                if (words.find(line.size()) == words.end()) {
+                    vector<string> temp;
+                    temp.push_back(line);
+                    words.insert({line.size(), temp});
+                } else {
+                    words[line.size()].push_back(line);
+                }
+                if (line.size() > max_size) max_size = line.size();
+            }
         }
         input_file.close();
     } catch (const ifstream::failure &f) {
@@ -58,6 +108,33 @@ bool load_words(const string &filename) {
     }
 
     return true;
+}
+
+// ###### Anagram Detection ######
+
+/**
+ * Determines the amount of each character present in a string.
+*/
+vector<int> break_down(string str) {
+    //TODO
+    vector<int> word;
+
+    // Populates every subvector with 28 zeros (alphabet + 2 punctuation marks).
+    for (int i = 0; i < 28; i++) {
+        word.push_back(0);
+    }
+
+    for (auto character : str) {
+        if (upper_case(character))
+            word[character - 65] += 1;
+        else if (lower_case(character))
+            word[character - 97] += 1;
+        else if (hyphen(character))
+            word[26] += 1;
+        else
+            word[27] += 1;
+    }
+    components.push_back(word);
 }
 
 void clean_up() {
@@ -74,8 +151,15 @@ int main(int argc, char *const argv[]) {
     if (!load_words(filename)) {
         return 1;
     }
-    for (string &str : words) {
-        cout << str << endl;
+
+    cout << max_size << endl;
+    for (auto it = words.begin(); it != words.end(); ++it) {
+        cout << it->first << " : ";
+        // how to output the vector here? since the len of value differs
+        // for each key I need that size
+        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+            cout << *it2 << " ";
+        cout << endl;
     }
 
     return 0;
