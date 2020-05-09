@@ -19,9 +19,13 @@
 using namespace std;
 
 // Data Fields.
-vector<vector<int>> components;           // The components of all words for a given size.
+vector<string> results;
+
 map<unsigned int, vector<string>> words;  // Words imported from dictionary.
-unsigned int max_size;                    // Maximum word size.
+int word_count = 0;
+unsigned int max_size = 0;          // Maximum word size.
+unsigned int max_anagram_size = 0;  // Maximum anagram size.
+bool anagram_found = false;
 
 // Functions.
 
@@ -91,14 +95,15 @@ bool load_words(const string &filename) {
     try {
         while (getline(input_file, line)) {
             if (char_check(line)) {
-                if (words.find(line.size()) == words.end()) {
+                if (words.find(line.size()) == words.end()) {  // There are no words of that size.
                     vector<string> temp;
                     temp.push_back(line);
                     words.insert({line.size(), temp});
                 } else {
                     words[line.size()].push_back(line);
                 }
-                if (line.size() > max_size) max_size = line.size();
+                if (line.size() > max_size) max_size = line.size();  // Update max size.
+                word_count++;
             }
         }
         input_file.close();
@@ -134,7 +139,45 @@ vector<int> break_down(string str) {
         else
             word[27] += 1;
     }
-    components.push_back(word);
+
+    // for (auto aaf : word) {
+    //     cout << aaf << endl;
+    // }
+    return word;
+}
+
+void find_anagrams() {
+    //TODO
+
+    for (unsigned int i = max_size; i >= 1; i--) {
+        vector<vector<int>> current_size;
+        for (auto word : words[i]) {  // Breaks down all words of this size.
+            // cout << word << endl;
+            current_size.push_back(break_down(word));
+        }
+        for (unsigned int j = 0; j < current_size.size() - 1; j++) {
+            bool set_found = false;
+            for (unsigned int k = j + 1; k < current_size.size(); k++) {
+                if (current_size[j] == current_size[k]) {
+                    if (!(find(results.begin(), results.end(), words[i][k]) != results.end())) {
+                        set_found = true;
+                        results.push_back(words[i][k]);
+                    }
+                    anagram_found = true;
+                    max_anagram_size = max_size;
+                }
+            }
+            if (set_found)
+                results.push_back(words[i][j]);
+        }
+
+        if (results.size() > 0) return;
+    }
+    return;
+}
+
+void display_anagrams() {
+    //TODO
 }
 
 void clean_up() {
@@ -152,14 +195,19 @@ int main(int argc, char *const argv[]) {
         return 1;
     }
 
-    cout << max_size << endl;
-    for (auto it = words.begin(); it != words.end(); ++it) {
-        cout << it->first << " : ";
-        // how to output the vector here? since the len of value differs
-        // for each key I need that size
-        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-            cout << *it2 << " ";
-        cout << endl;
+    // cout << word_count << endl;
+    if (word_count == 0)
+        cout << "No anagrams found." << endl;
+    else {
+        find_anagrams();
+        if (max_anagram_size == 0)
+            cout << "No anagrams found." << endl;
+        else {
+            cout << "Max anagram length: " << max_anagram_size << endl;
+            for (auto str : results) {
+                cout << str << endl;
+            }
+        }
     }
 
     return 0;
