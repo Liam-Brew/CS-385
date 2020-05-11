@@ -19,9 +19,10 @@
 using namespace std;
 
 // Data Fields.
-vector<string> results;
+vector<vector<string>> results;
 
 map<unsigned int, vector<string>> words;  // Words imported from dictionary.
+
 int word_count = 0;
 unsigned int max_size = 0;          // Maximum word size.
 unsigned int max_anagram_size = 0;  // Maximum anagram size.
@@ -63,14 +64,9 @@ bool apostrophe(char character) {
  * Returns a boolean indicating if every character of the input string valid.
 */
 bool char_check(string str) {
+    //TODO
     for (char &character : str) {  // Check for illegal characters.
-        if (upper_case(character))
-            continue;
-        else if (lower_case(character))
-            continue;
-        else if (hyphen(character))
-            continue;
-        else if (apostrophe(character))
+        if (upper_case(character) || lower_case(character) || hyphen(character) || apostrophe(character))
             continue;
         else
             return false;
@@ -139,11 +135,16 @@ vector<int> break_down(string str) {
         else
             word[27] += 1;
     }
-
-    // for (auto aaf : word) {
-    //     cout << aaf << endl;
-    // }
     return word;
+}
+
+bool end_early(string str) {
+    for (auto set : results) {
+        for (auto word : set) {
+            if (word == str) return true;
+        }
+    }
+    return false;
 }
 
 void find_anagrams() {
@@ -152,23 +153,30 @@ void find_anagrams() {
     for (unsigned int i = max_size; i >= 1; i--) {
         vector<vector<int>> current_size;
         for (auto word : words[i]) {  // Breaks down all words of this size.
-            // cout << word << endl;
             current_size.push_back(break_down(word));
         }
+
         for (unsigned int j = 0; j < current_size.size() - 1; j++) {
             bool set_found = false;
+            vector<string> answer;
+
+            if (end_early(words[i][j])) continue;
+
             for (unsigned int k = j + 1; k < current_size.size(); k++) {
                 if (current_size[j] == current_size[k]) {
-                    if (!(find(results.begin(), results.end(), words[i][k]) != results.end())) {
+                    if (!(find(answer.begin(), answer.end(), words[i][k]) != answer.end())) {
                         set_found = true;
-                        results.push_back(words[i][k]);
+                        answer.push_back(words[i][k]);
                     }
                     anagram_found = true;
                     max_anagram_size = max_size;
                 }
             }
-            if (set_found)
-                results.push_back(words[i][j]);
+            if (set_found) {
+                answer.push_back(words[i][j]);
+                results.push_back(answer);
+                continue;
+            }
         }
 
         if (results.size() > 0) return;
@@ -176,8 +184,52 @@ void find_anagrams() {
     return;
 }
 
+void swap_word(vector<string> set, int a, int b) {
+    //TODO
+    string temp = set[a];
+    set[a] = set[b];
+    set[b] = temp;
+}
+
+void swap_set(int a, int b) {
+    //TODO
+    vector<string> temp = results[a];
+    results[a] = results[b];
+    results[b] = temp;
+}
+
+vector<string> alphabetize_set(vector<string> set) {
+    sort(set.begin(), set.end());
+
+    return set;
+}
+
+void alphabetize_results() {
+    for (unsigned int i = 0; i < results.size() - 1; i++) {
+        if (results[i][0][0] > results[i + 1][0][0]) swap_set(i, i + 1);
+    }
+}
+
 void display_anagrams() {
     //TODO
+    for (unsigned int i = 0; i < results.size(); i++) {
+        results[i] = alphabetize_set(results[i]);
+    }
+    alphabetize_results();
+    for (auto set : results) {
+        for (auto str : set) {
+            cout << str << endl;
+        }
+        cout << endl;
+    }
+
+    // // alphabetize_results();
+    // for (auto set : results) {
+    //     for (auto str : set) {
+    //         cout << str << endl;
+    //     }
+    //     cout << endl;
+    // }
 }
 
 void clean_up() {
@@ -204,9 +256,7 @@ int main(int argc, char *const argv[]) {
             cout << "No anagrams found." << endl;
         else {
             cout << "Max anagram length: " << max_anagram_size << endl;
-            for (auto str : results) {
-                cout << str << endl;
-            }
+            display_anagrams();
         }
     }
 
