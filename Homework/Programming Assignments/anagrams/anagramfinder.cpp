@@ -19,14 +19,12 @@
 using namespace std;
 
 // Data Fields.
-vector<vector<string>> results;
+map<string, vector<string>> words;  // Collection of each word mapped to its lower-case letter compisition.
+vector<vector<string>> anagrams;    // Collection of different sets of equal-length anagrams.
 
-map<unsigned int, vector<string>> words;  // Words imported from dictionary.
-
-int word_count = 0;
-unsigned int max_size = 0;          // Maximum word size.
-unsigned int max_anagram_size = 0;  // Maximum anagram size.
-bool anagram_found = false;
+int word_count = 0;         // Number of legal words read from the file.
+unsigned int max_size = 0;  // Maximum word size.
+int max_anagram_size = 0;   // Maximum anagram size.
 
 // Functions.
 
@@ -61,17 +59,35 @@ bool apostrophe(char character) {
 }
 
 /**
- * Returns a boolean indicating if every character of the input string valid.
+ * Determines if a word is legal. If so, the word is added to the map at a key representing the word's alphabetized letter components. 
 */
-bool char_check(string str) {
+void char_check(string &str) {
     //TODO
     for (char &character : str) {  // Check for illegal characters.
-        if (upper_case(character) || lower_case(character) || hyphen(character) || apostrophe(character))
+        if (upper_case(character) || lower_case(character) || hyphen(character) || apostrophe(character)) {
             continue;
-        else
-            return false;
+        } else {
+            return;
+        }
     }
-    return true;
+
+    string sorted = str;
+    transform(sorted.begin(), sorted.end(), sorted.begin(), ::tolower);  // Alphabetizes the word's letter components and translates them to
+    sort(sorted.begin(), sorted.end());                                  // lower-case notation to ensure uniformity.
+
+    if (words.find(sorted) == words.end()) {  // If a key for that component structure already exists,
+        vector<string> temp = {str};          //append it to the vector already present.
+        words.insert({sorted, temp});
+    } else {  // If no key exists then create a new value vector there.
+        words[sorted].push_back(str);
+    }
+
+    if (str.size() > max_size) {  // Keeps track of the maximum word size for later use.
+        max_size = str.size();
+    }
+
+    word_count++;  // Keeps track of word count for use in edge-condition assessment.
+    return;
 }
 
 // ###### File Reading ######
@@ -80,7 +96,6 @@ bool char_check(string str) {
  * Reads the words from the input file and determines if they are valid.
 */
 bool load_words(const string &filename) {
-    //TODO
     ifstream input_file(filename.c_str());
     if (!input_file) {
         cerr << "Error: File '" << filename << "' not found." << endl;
@@ -90,17 +105,7 @@ bool load_words(const string &filename) {
     string line;
     try {
         while (getline(input_file, line)) {
-            if (char_check(line)) {
-                if (words.find(line.size()) == words.end()) {  // There are no words of that size.
-                    vector<string> temp;
-                    temp.push_back(line);
-                    words.insert({line.size(), temp});
-                } else {
-                    words[line.size()].push_back(line);
-                }
-                if (line.size() > max_size) max_size = line.size();  // Update max size.
-                word_count++;
-            }
+            char_check(line);  // Reads the word on every line.
         }
         input_file.close();
     } catch (const ifstream::failure &f) {
@@ -114,151 +119,91 @@ bool load_words(const string &filename) {
 // ###### Anagram Detection ######
 
 /**
- * Determines the amount of each character present in a string.
+ * Examines the map, starting with the largest word size for efficiency purposes, to determine if anagrams are present.
+ * In this case an anagram represents a key which has two or more values associated with it (two or more words).
 */
-vector<int> break_down(string str) {
-    //TODO
-    vector<int> word;
-
-    // Populates every subvector with 28 zeros (alphabet + 2 punctuation marks).
-    for (int i = 0; i < 28; i++) {
-        word.push_back(0);
-    }
-
-    for (auto character : str) {
-        if (upper_case(character))
-            word[character - 65] += 1;
-        else if (lower_case(character))
-            word[character - 97] += 1;
-        else if (hyphen(character))
-            word[26] += 1;
-        else
-            word[27] += 1;
-    }
-    return word;
-}
-
-bool end_early(string str) {
-    for (auto set : results) {
-        for (auto word : set) {
-            if (word == str) return true;
-        }
-    }
-    return false;
-}
 
 void find_anagrams() {
-    //TODO
+    for (unsigned int i = max_size; i >= 0; i--) {  // Starts at the maximum size to reduce the number of iterations on average.
+        for (auto const &pair : words) {
+            unsigned int first = pair.first.size();
+            vector<string> second = pair.second;
 
-    for (unsigned int i = max_size; i >= 1; i--) {
-        vector<vector<int>> current_size;
-        for (auto word : words[i]) {  // Breaks down all words of this size.
-            current_size.push_back(break_down(word));
-        }
+            if (first == i) {             // If the length of the key is equal to the length being searched for.
+                if (second.size() > 1) {  // If there are multiple words for that key.
+                    vector<string> set;
+                    sort(second.begin(), second.end());  // Alphabetize the present words.
 
-        for (unsigned int j = 0; j < current_size.size() - 1; j++) {
-            bool set_found = false;
-            vector<string> answer;
-
-            if (end_early(words[i][j])) continue;
-
-            for (unsigned int k = j + 1; k < current_size.size(); k++) {
-                if (current_size[j] == current_size[k]) {
-                    if (!(find(answer.begin(), answer.end(), words[i][k]) != answer.end())) {
-                        set_found = true;
-                        answer.push_back(words[i][k]);
+                    for (auto str : second) {
+                        set.push_back(str);
                     }
-                    anagram_found = true;
-                    max_anagram_size = max_size;
+                    anagrams.push_back(set);  // Store each set of related words in their own vector to assist in later ordering.
+                    max_anagram_size = i;
                 }
             }
-            if (set_found) {
-                answer.push_back(words[i][j]);
-                results.push_back(answer);
-                continue;
-            }
         }
-
-        if (results.size() > 0) return;
-    }
-    return;
-}
-
-void swap_word(vector<string> set, int a, int b) {
-    //TODO
-    string temp = set[a];
-    set[a] = set[b];
-    set[b] = temp;
-}
-
-void swap_set(int a, int b) {
-    //TODO
-    vector<string> temp = results[a];
-    results[a] = results[b];
-    results[b] = temp;
-}
-
-vector<string> alphabetize_set(vector<string> set) {
-    sort(set.begin(), set.end());
-
-    return set;
-}
-
-void alphabetize_results() {
-    for (unsigned int i = 0; i < results.size() - 1; i++) {
-        if (results[i][0][0] > results[i + 1][0][0]) swap_set(i, i + 1);
+        return;
     }
 }
 
+/**
+ * Alphabetizes the order of the sets of anagrams by comparing each of their first words (all sets themselves have already been alphabetized.)
+ * Once finished, this order is displayed on the screen.
+*/
 void display_anagrams() {
-    //TODO
-    for (unsigned int i = 0; i < results.size(); i++) {
-        results[i] = alphabetize_set(results[i]);
+    vector<string> results_headers;
+
+    for (auto vect : anagrams) {  // Adds the first word (already alphabetized) of each set to a working vector.
+        string str = vect[0];
+        transform(str.begin(), str.end(), str.begin(), ::tolower);  // Translates word to lower-case to ensure uniformity.
+
+        results_headers.push_back(str);
     }
-    alphabetize_results();
-    for (auto set : results) {
-        for (auto str : set) {
+
+    if (results_headers.size() > 1) sort(results_headers.begin(), results_headers.end());  // If there exists multiple headers alphabetize them.
+
+    for (unsigned int i = 0; i < results_headers.size(); i++) {
+        string tag = results_headers[i];
+        sort(tag.begin(), tag.end());  // Alphabetizes the tag to bring it in-line to the map's key convention.
+
+        sort(words[tag].begin(), words[tag].end());  // Ensures the values at that key are alphabetized.
+
+        for (auto str : words[tag]) {  // Prints the values.
             cout << str << endl;
         }
         cout << endl;
     }
-
-    // // alphabetize_results();
-    // for (auto set : results) {
-    //     for (auto str : set) {
-    //         cout << str << endl;
-    //     }
-    //     cout << endl;
-    // }
 }
 
+/**
+ * Removes the map from memory.
+*/
 void clean_up() {
-    //TODO
+    words.clear();
 }
 
 int main(int argc, char *const argv[]) {
-    //TODO
-    if (argc != 2) {
+    if (argc != 2) {  // Invalid invocation.
         cerr << "Usage: " << argv[0] << " <dictionary file>" << endl;
         return 1;
     }
     string filename(argv[1]);
-    if (!load_words(filename)) {
+    if (!load_words(filename)) {  // Read file error.
         return 1;
     }
 
-    // cout << word_count << endl;
-    if (word_count == 0)
+    if (word_count == 0)  // No words are present.
         cout << "No anagrams found." << endl;
     else {
         find_anagrams();
-        if (max_anagram_size == 0)
+
+        if (max_anagram_size == 0)  // No anagrams are present.
             cout << "No anagrams found." << endl;
         else {
             cout << "Max anagram length: " << max_anagram_size << endl;
             display_anagrams();
         }
     }
-
+    clean_up();
     return 0;
 }
